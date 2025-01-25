@@ -16,11 +16,21 @@ export const FILESYSTEM: Record<string, FileSystemNode> = {
         children: {
           documents: {
             type: "directory",
-            name: "documents",
+            name: "resume",
             children: {
-              "hello.txt": {
+              "about.md": {
                 type: "file",
-                name: "hello.txt",
+                name: "about.md",
+                content: "Hello, World!",
+              },
+              "education.md": {
+                type: "file",
+                name: "education.md",
+                content: "Hello, World!",
+              },
+              "career.md": {
+                type: "file",
+                name: "career.md",
                 content: "Hello, World!",
               },
             },
