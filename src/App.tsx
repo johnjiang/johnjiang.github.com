@@ -3,6 +3,7 @@ import { ReactTerminal } from "react-terminal";
 import "./App.css";
 import { SHELL } from "./terminal/constants";
 import { FILESYSTEM, FileSystemNode } from "./terminal/filesystem";
+import { terminalError } from "./terminal/errors";
 
 function App() {
   const [currentDirectory, setCurrentDirectory] = useState("/home/johnjiang");
@@ -32,26 +33,36 @@ function App() {
     pwd: () => currentDirectory,
     ls: () => {
       const node = getNodeAtPath(currentDirectory);
-      if (!node || !node.children) return "Invalid directory";
+      if (!node || !node.children) return terminalError.invalidDirectory();
 
       const entries = Object.entries(node.children);
       if (entries.length === 0) return "(empty directory)";
 
-      return entries.map(([name, node]) => {
+      const fileElements = entries.map(([name, node]) => {
         const isDirectory = node.type === "directory";
-        const displayName = isDirectory ? (
+        return isDirectory ? (
           <span className="text-blue-500">{name}/</span>
         ) : (
           <span className="text-gray-200">{name}</span>
         );
-        return displayName;
       });
+
+      return (
+        <>
+          {fileElements.map((elem, i) => (
+            <>
+              {elem}
+              {i < fileElements.length - 1 && " "}
+            </>
+          ))}
+        </>
+      );
     },
     cd: (directory: string) => {
       // Handle absolute paths
       if (directory.startsWith("/")) {
         const node = getNodeAtPath(directory);
-        if (!node) return `cd: no such directory: ${directory}`;
+        if (!node) return terminalError.notFound("cd", directory);
         setCurrentDirectory(directory);
         return `Changed directory to ${directory}`;
       }
@@ -72,33 +83,34 @@ function App() {
       // Handle relative paths
       const newDir = `${currentDirectory}/${directory}`.replace(/\/+/g, "/");
       const node = getNodeAtPath(newDir);
-      if (!node) return `cd: no such directory: ${directory}`;
+      if (!node) return terminalError.notFound("cd", directory);
       setCurrentDirectory(newDir);
       return `Changed directory to ${newDir}`;
     },
     cat: (filename: string) => {
       const dir = getNodeAtPath(currentDirectory);
-      if (!dir || !dir.children) return "Invalid directory";
+      if (!dir || !dir.children) return terminalError.invalidDirectory();
 
       const file = dir.children[filename];
-      if (!file) return `cat: ${filename}: No such file or directory`;
-      if (file.type === "directory") return `cat: ${filename}: Is a directory`;
+      if (!file) return terminalError.notFound("cat", filename);
+      if (file.type === "directory")
+        return terminalError.isDirectory("cat", filename);
 
       return file.content || "";
     },
     open: (filename: string) => {
       const dir = getNodeAtPath(currentDirectory);
-      if (!dir || !dir.children) return "Invalid directory";
+      if (!dir || !dir.children) return terminalError.invalidDirectory();
 
       const file = dir.children[filename];
-      if (!file) return `open: no such file: ${filename}`;
+      if (!file) return terminalError.notFound("open", filename);
 
       if (filename.endsWith(".url")) {
         window.open(file.content, "_blank");
         return `Opening ${filename}...`;
       }
 
-      return `open: cannot open ${filename}`;
+      return terminalError.cannotOpen(filename);
     },
   };
 
@@ -119,7 +131,7 @@ function App() {
           prompt={"$"}
           theme={"dark"}
           errorMessage={(command: string) =>
-            `${SHELL}: command not found: ${command}`
+            terminalError.commandNotFound(SHELL, command)
           }
         />
       </div>
