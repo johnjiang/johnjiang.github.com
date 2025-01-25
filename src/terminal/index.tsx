@@ -4,7 +4,7 @@ import { SHELL } from "./constants";
 import { terminalError } from "./errors";
 import { FILESYSTEM, FileSystemNode } from "./filesystem";
 
-function App() {
+function Terminal() {
   const [currentDirectory, setCurrentDirectory] = useState("/home/johnjiang");
 
   // Helper function to get node at path
@@ -130,8 +130,9 @@ function App() {
       errorMessage={(command: string) =>
         terminalError.commandNotFound(SHELL, command)
       }
+      showControlBar={false}
     />
   );
 }
 
-export default App;
+export default Terminal;
