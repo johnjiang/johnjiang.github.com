@@ -76,6 +76,30 @@ function App() {
       setCurrentDirectory(newDir);
       return `Changed directory to ${newDir}`;
     },
+    cat: (filename: string) => {
+      const dir = getNodeAtPath(currentDirectory);
+      if (!dir || !dir.children) return "Invalid directory";
+
+      const file = dir.children[filename];
+      if (!file) return `cat: ${filename}: No such file or directory`;
+      if (file.type === "directory") return `cat: ${filename}: Is a directory`;
+
+      return file.content || "";
+    },
+    open: (filename: string) => {
+      const dir = getNodeAtPath(currentDirectory);
+      if (!dir || !dir.children) return "Invalid directory";
+
+      const file = dir.children[filename];
+      if (!file) return `open: no such file: ${filename}`;
+
+      if (filename.endsWith(".url")) {
+        window.open(file.content, "_blank");
+        return `Opening ${filename}...`;
+      }
+
+      return `open: cannot open ${filename}`;
+    },
   };
 
   const welcomeMessage = (

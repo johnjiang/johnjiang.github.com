@@ -30,6 +30,16 @@ export const FILESYSTEM: Record<string, FileSystemNode> = {
             name: "notes.txt",
             content: "Important notes go here",
           },
+          "github.url": {
+            type: "file",
+            name: "github.url",
+            content: "https://github.com/johnjiang",
+          },
+          "linkedin.url": {
+            type: "file",
+            name: "linkedin.url",
+            content: "https://linkedin.com/in/johnjiang101",
+          },
         },
       },
     },
