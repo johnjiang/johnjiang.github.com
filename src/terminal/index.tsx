@@ -4,59 +4,41 @@ import { SHELL } from "./constants";
 import { terminalError } from "./errors";
 import { FILESYSTEM, FileSystemNode } from "./filesystem";
 
+function getNodeAtPath(path: string): FileSystemNode | null {
+  if (path === "/")
+    return { type: "directory", name: "/", children: FILESYSTEM };
+
+  const parts = path.split("/").filter(Boolean);
+  let current: Record<string, FileSystemNode> = FILESYSTEM;
+
+  for (const part of parts) {
+    if (!current[part] || current[part].type !== "directory") return null;
+    current = current[part].children || {};
+  }
+
+  return {
+    type: "directory",
+    name: parts[parts.length - 1],
+    children: current,
+  };
+}
+
 function Terminal() {
   const [currentDirectory, setCurrentDirectory] = useState("/home/johnjiang");
 
-  // Helper function to get node at path
-  const getNodeAtPath = (path: string): FileSystemNode | null => {
-    if (path === "/")
-      return { type: "directory", name: "/", children: FILESYSTEM };
-
-    const parts = path.split("/").filter(Boolean);
-    let current: Record<string, FileSystemNode> = FILESYSTEM;
-
-    for (const part of parts) {
-      if (!current[part] || current[part].type !== "directory") return null;
-      current = current[part].children || {};
-    }
-
-    return {
-      type: "directory",
-      name: parts[parts.length - 1],
-      children: current,
-    };
-  };
-
   const commands = {
-    whoami: "johnjiang",
-    pwd: () => currentDirectory,
-    ls: () => {
-      const node = getNodeAtPath(currentDirectory);
-      if (!node || !node.children) return terminalError.invalidDirectory();
+    cat: (filename: string) => {
+      const dir = getNodeAtPath(currentDirectory);
+      if (!dir || !dir.children) return terminalError.invalidDirectory();
 
-      const entries = Object.entries(node.children);
-      if (entries.length === 0) return "(empty directory)";
+      const file = dir.children[filename];
+      if (!file) return terminalError.notFound("cat", filename);
+      if (file.type === "directory")
+        return terminalError.isDirectory("cat", filename);
 
-      const fileElements = entries.map(([name, node]) => {
-        const isDirectory = node.type === "directory";
-        return isDirectory ? (
-          <span className="text-blue-500">{name}/</span>
-        ) : (
-          <span className="text-gray-200">{name}</span>
-        );
-      });
-
-      return (
-        <>
-          {fileElements.map((elem, i) => (
-            <>
-              {elem}
-              {i < fileElements.length - 1 && " "}
-            </>
-          ))}
-        </>
-      );
+      return file.content || "";
     },
+
     cd: (directory: string) => {
       // Handle absolute paths
       if (directory.startsWith("/")) {
@@ -86,17 +68,35 @@ function Terminal() {
       setCurrentDirectory(newDir);
       return `Changed directory to ${newDir}`;
     },
-    cat: (filename: string) => {
-      const dir = getNodeAtPath(currentDirectory);
-      if (!dir || !dir.children) return terminalError.invalidDirectory();
 
-      const file = dir.children[filename];
-      if (!file) return terminalError.notFound("cat", filename);
-      if (file.type === "directory")
-        return terminalError.isDirectory("cat", filename);
+    ls: () => {
+      const node = getNodeAtPath(currentDirectory);
+      if (!node || !node.children) return terminalError.invalidDirectory();
 
-      return file.content || "";
+      const entries = Object.entries(node.children);
+      if (entries.length === 0) return "(empty directory)";
+
+      const fileElements = entries.map(([name, node]) => {
+        const isDirectory = node.type === "directory";
+        return isDirectory ? (
+          <span className="text-blue-500">{name}/</span>
+        ) : (
+          <span className="text-gray-200">{name}</span>
+        );
+      });
+
+      return (
+        <>
+          {fileElements.map((elem, i) => (
+            <>
+              {elem}
+              {i < fileElements.length - 1 && " "}
+            </>
+          ))}
+        </>
+      );
     },
+
     open: (filename: string) => {
       const dir = getNodeAtPath(currentDirectory);
       if (!dir || !dir.children) return terminalError.invalidDirectory();
@@ -111,6 +111,10 @@ function Terminal() {
 
       return terminalError.cannotOpen(filename);
     },
+
+    pwd: () => currentDirectory,
+
+    whoami: "johnjiang",
   };
 
   const welcomeMessage = (

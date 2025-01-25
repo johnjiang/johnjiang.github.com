@@ -14,7 +14,7 @@ export const FILESYSTEM: Record<string, FileSystemNode> = {
         type: "directory",
         name: "johnjiang",
         children: {
-          documents: {
+          resume: {
             type: "directory",
             name: "resume",
             children: {
