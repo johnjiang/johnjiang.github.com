@@ -1,7 +1,21 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
 
 function Home() {
+  const [visitorNumber] = useState(() =>
+    Math.floor(Math.random() * 99999)
+      .toString()
+      .padStart(5, "0"),
+  );
+  const [lastUpdated] = useState(() =>
+    new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+  );
+
   return (
     <div className="geocities-home">
       {/* Under construction banner */}
@@ -12,19 +26,14 @@ function Home() {
       </div>
 
       {/* Main title with rainbow effect */}
-      <h1 className="rainbow-text">
-        ~~* Welcome to John Jiang's Homepage *~~
-      </h1>
+      <h1 className="rainbow-text">~~* Welcome to John Jiang's Homepage *~~</h1>
 
       {/* Animated marquee */}
       <div className="marquee-container">
         <div className="marquee-text">
-          ★ You are visitor #
-          {Math.floor(Math.random() * 99999)
-            .toString()
-            .padStart(5, "0")}{" "}
-          since January 1999! ★ Thanks for stopping by! ★ Best viewed in
-          Netscape Navigator 4.0 at 800x600 resolution! ★
+          ★ You are visitor #{visitorNumber} since January 1999! ★ Thanks for
+          stopping by! ★ Best viewed in Netscape Navigator 4.0 at 800x600
+          resolution! ★
         </div>
       </div>
 
@@ -125,14 +134,7 @@ function Home() {
       {/* Copyright */}
       <div className="copyright">
         <p>Copyright © 1999-2026 John Jiang. All Rights Reserved.</p>
-        <p>
-          This page was last updated on{" "}
-          {new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
+        <p>This page was last updated on {lastUpdated}</p>
       </div>
 
       {/* Geocities banner */}
