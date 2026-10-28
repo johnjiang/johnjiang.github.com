@@ -61,15 +61,26 @@ function Terminal() {
     });
     const dataListener = term.onData(editor.handleData);
 
-    shell.run("neofetch");
-    shell.write(
-      `\nWelcome! Type ${ansi.cyan}help${ansi.reset} to see what you can do, ` +
-        `${ansi.cyan}resume${ansi.reset} to read my resume, or press ${ansi.cyan}Tab${ansi.reset} to autocomplete.\n\n`,
-    );
-    editor.prompt();
-    term.focus();
+    // Wait until the container has a usable width; output written while it is
+    // hidden or still laying out would be wrapped to a couple of columns.
+    let started = false;
+    const start = () => {
+      if (started || term.cols < 20) return;
+      started = true;
+      shell.run("neofetch");
+      shell.write(
+        `\nWelcome! Type ${ansi.cyan}help${ansi.reset} to see what you can do, ` +
+          `${ansi.cyan}resume${ansi.reset} to read my resume, or press ${ansi.cyan}Tab${ansi.reset} to autocomplete.\n\n`,
+      );
+      editor.prompt();
+      term.focus();
+    };
+    start();
 
-    const resizeObserver = new ResizeObserver(() => fit.fit());
+    const resizeObserver = new ResizeObserver(() => {
+      fit.fit();
+      start();
+    });
     resizeObserver.observe(container);
 
     return () => {
