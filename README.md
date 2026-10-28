@@ -1,50 +1,71 @@
-# React + TypeScript + Vite
+# johnjiang.me
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Source for [johnjiang.me](https://johnjiang.me): a GeoCities-style homepage and
+JohnOS, a terminal you can use to browse my resume.
 
-Currently, two official plugins are available:
+Built with React, TypeScript, Vite and Tailwind CSS. The terminal runs on
+[xterm.js](https://xtermjs.org/) with a small custom shell.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Development
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
+```bash
+npm install
+npm run dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Then open http://localhost:5173. The terminal is at `/#/terminal`.
 
-```js
-// eslint.config.js
-import react from "eslint-plugin-react";
+| Script                 | What it does                                                   |
+| ---------------------- | -------------------------------------------------------------- |
+| `npm run dev`          | Start the Vite dev server                                      |
+| `npm run build`        | Type-check and build to `dist/`                                |
+| `npm run preview`      | Serve the production build locally                             |
+| `npm run lint`         | Lint with [oxlint](https://oxc.rs/docs/guide/usage/linter)     |
+| `npm run format`       | Format with [oxfmt](https://oxc.rs/docs/guide/usage/formatter) |
+| `npm run format:check` | Check formatting without writing                               |
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: "18.3" } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs["jsx-runtime"].rules,
-  },
-});
+## Project layout
+
 ```
+src/
+  pages/Home.tsx          The homepage
+  terminal/
+    index.tsx             Mounts xterm.js and wires it to the shell
+    lineEditor.ts         Line editing: shortcuts, history, reverse search, tab completion
+    shell.ts              Lexer, parser and executor: pipes, redirects, globs, $VARS, aliases
+    commands.ts           Command implementations (ls, cd, cat, grep, ...)
+    filesystem.ts         In-memory filesystem the shell runs against
+    resume.ts             Resume content, served as files under ~/resume
+    constants.ts          User/host names and ANSI colour helpers
+```
+
+## The terminal
+
+Type `help` for the full list of commands and keyboard shortcuts. Highlights:
+
+- Common commands: `ls`, `cd`, `cat`, `grep`, `find`, `tree`, `head`, `tail`,
+  `wc`, `sort`, `uniq`, `mkdir`, `rm`, `cp`, `mv`, `history`, `alias`, `man`, ...
+- Shell features: pipes, `>`/`>>`/`<` redirects, `;`/`&&`/`||`, globs, quotes,
+  `$VARIABLES`, `~`, and `!!`/`!n` history expansion
+- Readline shortcuts (Ctrl+A/E/U/K/W/R/L/C/D, Alt+B/F/D/.) and tab completion
+  for commands, paths and variables
+- `resume` prints the whole resume; `open github.url` opens a link
+
+The filesystem lives in memory, so changes reset on reload.
+
+### Updating the resume
+
+Edit [`src/terminal/resume.ts`](src/terminal/resume.ts). Each export becomes a
+file under `~/resume` (wired up in [`filesystem.ts`](src/terminal/filesystem.ts)),
+and `RESUME_FILES` sets the order the `resume` command prints them in.
+
+### Adding a command
+
+Add an entry to `commands` in [`src/terminal/commands.ts`](src/terminal/commands.ts).
+It shows up automatically in `help`, tab completion and `/bin`.
+
+## Deployment
+
+Pushing to `main` builds the site and deploys it to GitHub Pages via
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). The custom
+domain and HTTPS are configured in the repo's Pages settings.
